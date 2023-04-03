@@ -1,0 +1,32 @@
+// Modify the environment
+ENGINE {
+    INIT {
+        !-
+            Load will load a requirements file for a project and check to validate 
+            the data such as the operating system or the SLC version required or the 
+            SL version. This is of course only a concept and not something that is 
+            fully implemented but it is a good idea to do so. These will also be checking 
+            for existing libraries and dependancies. If the libraries match standard libs 
+            that are accepted by SL then it will continue, if else it will fail and exit
+        -!
+        load("Requirements.json");
+        constant DEFINE_CODE_MISSING_SEMICOLON = 12;
+        constant DEFINE_CODE_MISSING_LEFT_BRCE = 109;
+    
+        set depth_var = 0;
+        set basic_var = true;
+        set verbosity = true;
+        set debuglev  = true;
+
+        system  |"errors"| -> modify[basic(true), verbosity(true), depth(0)]; // Modify the error systems
+        system  |"output"| -> modify[debug(debuglev)]; // Allow for debuggable output
+        system  |"import"| -> modify[expect("directories")]; // Tell the import system to crawl files in directories
+        system  |"parser"| -> modify[DEFINE_CODE_MISSING_SEMICOLON, "Missing semicolon in statement"]; // Modifier for parser errors
+        system  |"parser"| -> modify[DEFINE_CODE_MISSING_LEFT_BRCE, "Sorry but I need a left bracket to finish the statement '}'"]; // Modifier for parser errors
+        system  |"import"| -> modify[allow("*.sl", "*.skyline", "*.modifier", "*.slmod")]; // Tell the importing engine to only accept base files
+        library |"IoT"|    -> modify["use:ROKU_ECP"];           // Tell the standard library to only import Roku External Control Protocol
+        library |"IoT"|    -> modify["use:APPLE_ECP"];          // Tell the standard library to only import APPLE External Control Protocol
+        library |"OPN"|    -> modify["use:GOLANG_PLUGINS"];     // Allow golang plugins
+        library |"SRV"|    -> modify["use:HTML,CSS"];           // Only allow routers to serve HTML/CSS files
+    };
+};
